@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+  
+  /* SmartProctor-X Dark Theme */
+  --dark-bg: hsl(240, 10%, 3.9%);
+  --dark-surface: hsl(240, 8%, 8%);
+  --dark-surface-variant: hsl(240, 6%, 12%);
+  --status-normal: hsl(122, 39%, 49%);
+  --status-warning: hsl(36, 100%, 50%);
+  --status-flagged: hsl(4, 90%, 58%);
+  --primary-blue: hsl(207, 90%, 54%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--dark-bg);
+    color: white;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+/* Custom classes for SmartProctor-X */
+.bg-dark-bg {
+  background-color: var(--dark-bg);
+}
+
+.bg-dark-surface {
+  background-color: var(--dark-surface);
+}
+
+.bg-dark-surface-variant {
+  background-color: var(--dark-surface-variant);
+}
+
+.bg-status-normal {
+  background-color: var(--status-normal);
+}
+
+.bg-status-warning {
+  background-color: var(--status-warning);
+}
+
+.bg-status-flagged {
+  background-color: var(--status-flagged);
+}
+
+.bg-primary-blue {
+  background-color: var(--primary-blue);
+}
+
+.text-status-normal {
+  color: var(--status-normal);
+}
+
+.text-status-warning {
+  color: var(--status-warning);
+}
+
+.text-status-flagged {
+  color: var(--status-flagged);
+}
+
+.text-primary-blue {
+  color: var(--primary-blue);
+}
+
+.border-status-normal {
+  border-color: var(--status-normal);
+}
+
+.border-status-warning {
+  border-color: var(--status-warning);
+}
+
+.border-status-flagged {
+  border-color: var(--status-flagged);
+}
+
+/* Alert notification animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.alert-enter {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Pulsing animation for flagged students */
+.student-flagged {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .8;
+  }
+}
