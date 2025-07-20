@@ -25,9 +25,9 @@ Preferred communication style: Simple, everyday language.
 - **Development Server**: Custom Vite integration for hot module replacement
 
 ### Data Storage Solutions
-- **Database**: PostgreSQL (configured via Drizzle)
+- **Database**: PostgreSQL with persistent storage via @neondatabase/serverless
 - **ORM**: Drizzle ORM with type-safe schema definitions
-- **Development Storage**: In-memory storage implementation for development/testing
+- **Production Storage**: DatabaseStorage implementation using PostgreSQL
 - **Migration**: Drizzle Kit for database schema management
 
 ## Key Components

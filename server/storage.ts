@@ -1,4 +1,6 @@
 import { students, events, type Student, type Event, type InsertStudent, type InsertEvent } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   // Students
@@ -23,25 +25,19 @@ export interface IStorage {
   }>;
 }
 
-export class MemStorage implements IStorage {
-  private students: Map<number, Student>;
-  private events: Map<number, Event>;
-  private currentStudentId: number;
-  private currentEventId: number;
+export class DatabaseStorage implements IStorage {
   private sessionStartTime: Date;
 
   constructor() {
-    this.students = new Map();
-    this.events = new Map();
-    this.currentStudentId = 1;
-    this.currentEventId = 1;
     this.sessionStartTime = new Date();
-
-    // Initialize with some sample students
     this.initializeSampleData();
   }
 
   private async initializeSampleData() {
+    // Check if students already exist in database
+    const existingStudents = await db.select().from(students);
+    if (existingStudents.length > 0) return;
+
     const sampleStudents: InsertStudent[] = [
       { studentId: "STU101", name: "Alex Johnson", behaviorScore: 95, status: "normal", alertCount: 0, aiConfidence: 98, isActive: true },
       { studentId: "STU102", name: "Sarah Chen", behaviorScore: 73, status: "warning", alertCount: 2, aiConfidence: 76, isActive: true },
@@ -59,61 +55,57 @@ export class MemStorage implements IStorage {
   }
 
   async getAllStudents(): Promise<Student[]> {
-    return Array.from(this.students.values()).filter(s => s.isActive);
+    return await db.select().from(students).where(eq(students.isActive, true));
   }
 
   async getStudent(id: number): Promise<Student | undefined> {
-    return this.students.get(id);
+    const [student] = await db.select().from(students).where(eq(students.id, id));
+    return student || undefined;
   }
 
   async getStudentByStudentId(studentId: string): Promise<Student | undefined> {
-    return Array.from(this.students.values()).find(s => s.studentId === studentId);
+    const [student] = await db.select().from(students).where(eq(students.studentId, studentId));
+    return student || undefined;
   }
 
   async createStudent(insertStudent: InsertStudent): Promise<Student> {
-    const id = this.currentStudentId++;
-    const student: Student = {
-      ...insertStudent,
-      id,
-      lastActivity: new Date(),
-    };
-    this.students.set(id, student);
+    const [student] = await db
+      .insert(students)
+      .values(insertStudent)
+      .returning();
     return student;
   }
 
   async updateStudent(id: number, updates: Partial<Student>): Promise<Student | undefined> {
-    const student = this.students.get(id);
-    if (!student) return undefined;
-    
-    const updatedStudent = { ...student, ...updates, lastActivity: new Date() };
-    this.students.set(id, updatedStudent);
-    return updatedStudent;
+    const [updatedStudent] = await db
+      .update(students)
+      .set({ ...updates, lastActivity: new Date() })
+      .where(eq(students.id, id))
+      .returning();
+    return updatedStudent || undefined;
   }
 
   async getAllEvents(): Promise<Event[]> {
-    return Array.from(this.events.values()).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return await db.select().from(events).orderBy(desc(events.timestamp));
   }
 
   async getEventsByStudentId(studentId: string): Promise<Event[]> {
-    return Array.from(this.events.values())
-      .filter(e => e.studentId === studentId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return await db.select().from(events)
+      .where(eq(events.studentId, studentId))
+      .orderBy(desc(events.timestamp));
   }
 
   async getRecentEvents(limit: number = 50): Promise<Event[]> {
-    return Array.from(this.events.values())
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
+    return await db.select().from(events)
+      .orderBy(desc(events.timestamp))
+      .limit(limit);
   }
 
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
-    const id = this.currentEventId++;
-    const event: Event = {
-      ...insertEvent,
-      id,
-      timestamp: new Date(),
-    };
-    this.events.set(id, event);
+    const [event] = await db
+      .insert(events)
+      .values(insertEvent)
+      .returning();
     return event;
   }
 
@@ -138,4 +130,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
