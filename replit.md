@@ -38,11 +38,16 @@ Preferred communication style: Simple, everyday language.
 3. **Event Log Sidebar** (`/components/EventLogSidebar.tsx`): Real-time event filtering and display
 4. **Alert Notifications** (`/components/AlertNotifications.tsx`): Pop-up alerts for high-priority events
 5. **Top Navigation** (`/components/TopNavigation.tsx`): Search, controls, and connection status
+6. **AI Analysis Panel** (`/components/AIAnalysisPanel.tsx`): Detailed AI analysis display for selected students
 
 ### Backend Components
 1. **Routes** (`/server/routes.ts`): API endpoints and WebSocket server setup
 2. **Storage Interface** (`/server/storage.ts`): Abstracted data access layer with in-memory implementation
 3. **Vite Integration** (`/server/vite.ts`): Development server with SSR support
+4. **AI Agents** (`/server/ai/`): Two specialized AI monitoring agents
+   - **Face Agent** (`faceAgent.ts`): Emotion and gaze tracking using simulated FER+ analysis
+   - **Gesture Agent** (`gestureAgent.ts`): Hand position and body pose detection using simulated Mediapipe
+   - **AI Manager** (`aiManager.ts`): Orchestrates both agents and provides combined risk analysis
 
 ### Shared Components
 1. **Schema** (`/shared/schema.ts`): Drizzle schema definitions and Zod validation schemas
@@ -62,10 +67,13 @@ Preferred communication style: Simple, everyday language.
 3. Real-time notifications via WebSocket for immediate UI updates
 
 ### Student Monitoring Workflow
-1. AI agents generate behavior events with confidence scores
-2. Events are categorized by priority (normal, warning, high)
-3. Student status automatically updates based on behavior scores and alert counts
-4. Dashboard provides filtering, search, and real-time visualization
+1. **AI Agent Processing**: Two specialized AI agents run in parallel:
+   - Face Agent: Analyzes emotion, gaze direction, face visibility, and attention levels every 3 seconds
+   - Gesture Agent: Monitors hand positions, body pose, movement levels, and suspicious activities every 4 seconds
+2. **Event Generation**: AI agents generate behavior events with confidence scores and risk assessments
+3. **Real-time Analysis**: Events are categorized by priority (normal, warning, high) and broadcast via WebSocket
+4. **Student Status Updates**: Behavior scores, alert counts, and status automatically update based on AI findings
+5. **Dashboard Visualization**: Real-time updates display in student grid, event log, and detailed AI analysis panel
 
 ## External Dependencies
 

@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import TopNavigation from "@/components/TopNavigation";
 import DashboardStats from "@/components/DashboardStats";
 import StudentGrid from "@/components/StudentGrid";
+import StudentCard from "@/components/StudentCard";
 import EventLogSidebar from "@/components/EventLogSidebar";
 import AlertNotifications from "@/components/AlertNotifications";
+import AIAnalysisPanel from "@/components/AIAnalysisPanel";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { Student, Event, DashboardStats as StatsType } from "@/types/dashboard";
 
@@ -15,6 +17,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [eventFilter, setEventFilter] = useState("All Events");
   const [alerts, setAlerts] = useState<Event[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   const { isConnected, lastMessage } = useWebSocket();
 
@@ -116,7 +119,29 @@ export default function Dashboard() {
           
           <DashboardStats stats={stats} />
           
-          <StudentGrid students={filteredStudents} />
+          <div className="flex-1 flex overflow-hidden">
+            {/* Student Grid */}
+            <div className="flex-1 p-6 overflow-auto">
+              <div className="grid grid-cols-3 gap-6">
+                {filteredStudents.map((student) => (
+                  <div 
+                    key={student.id} 
+                    onClick={() => setSelectedStudentId(student.studentId)}
+                    className={`cursor-pointer transition-transform hover:scale-105 ${
+                      selectedStudentId === student.studentId ? 'ring-2 ring-primary-blue' : ''
+                    }`}
+                  >
+                    <StudentCard student={student} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* AI Analysis Panel */}
+            <div className="w-96 p-6 border-l border-gray-700">
+              <AIAnalysisPanel studentId={selectedStudentId} />
+            </div>
+          </div>
         </div>
 
         {/* Event Log Sidebar */}
