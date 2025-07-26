@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import TopNavigation from "@/components/TopNavigation";
 import DashboardStats from "@/components/DashboardStats";
 import StudentGrid from "@/components/StudentGrid";
 import StudentCard from "@/components/StudentCard";
@@ -14,7 +13,6 @@ export default function Dashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<StatsType | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [eventFilter, setEventFilter] = useState("All Events");
   const [alerts, setAlerts] = useState<Event[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -86,11 +84,8 @@ export default function Dashboard() {
     }
   }, [lastMessage]);
 
-  // Filter students based on search
-  const filteredStudents = students.filter(student => 
-    student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.studentId.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Display all students
+  const filteredStudents = students;
 
   // Filter events
   const filteredEvents = events.filter(event => {
@@ -149,11 +144,6 @@ export default function Dashboard() {
       <div className="relative z-10 flex h-screen">
         {/* Main Dashboard Area */}
         <div className="flex-1 flex flex-col">
-          <TopNavigation 
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            isConnected={isConnected}
-          />
           
           {activeTab === "monitoring" && <DashboardStats stats={stats} />}
           
