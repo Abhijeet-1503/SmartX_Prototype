@@ -1,0 +1,14 @@
+{
+  "name": "smartx-prototype",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "prod-server.js",
+  "scripts": {
+    "build": "vite build",
+    "start": "node prod-server.js",
+    "dev": "vite dev"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

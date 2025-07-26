@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
 import TopNavigation from "@/components/TopNavigation";
 import DashboardStats from "@/components/DashboardStats";
 import StudentGrid from "@/components/StudentGrid";
@@ -8,13 +7,10 @@ import StudentCard from "@/components/StudentCard";
 import EventLogSidebar from "@/components/EventLogSidebar";
 import AlertNotifications from "@/components/AlertNotifications";
 import AIAnalysisPanel from "@/components/AIAnalysisPanel";
-import AdminPanel from "@/components/AdminPanel";
-import GodModePanel from "@/components/GodModePanel";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { Student, Event, DashboardStats as StatsType } from "@/types/dashboard";
 
 export default function Dashboard() {
-  const { user, isGodMode, isAdmin, isTeacher } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<StatsType | null>(null);
@@ -22,7 +18,7 @@ export default function Dashboard() {
   const [eventFilter, setEventFilter] = useState("All Events");
   const [alerts, setAlerts] = useState<Event[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"monitoring" | "admin" | "god">("monitoring");
+  const [activeTab, setActiveTab] = useState<"monitoring">("monitoring");
 
   const { isConnected, lastMessage } = useWebSocket();
 
@@ -110,18 +106,12 @@ export default function Dashboard() {
   };
 
   const renderContent = () => {
-    switch (activeTab) {
-      case "admin":
-        return isAdmin ? <AdminPanel /> : null;
-      case "god":
-        return isGodMode ? <GodModePanel /> : null;
-      default:
-        return (
-          <div className="flex-1 flex overflow-hidden">
-            {/* Student Grid */}
-            <div className="flex-1 p-6 overflow-auto custom-scrollbar">
-              <div className="grid grid-cols-3 gap-6">
-                {filteredStudents.map((student) => (
+    return (
+      <div className="flex-1 flex overflow-hidden">
+        {/* Student Grid */}
+        <div className="flex-1 p-6 overflow-auto custom-scrollbar">
+          <div className="grid grid-cols-3 gap-6">
+            {filteredStudents.map((student) => (
                   <div 
                     key={student.id} 
                     onClick={() => setSelectedStudentId(student.studentId)}
@@ -137,11 +127,10 @@ export default function Dashboard() {
             
             {/* AI Analysis Panel */}
             <div className="w-96 p-6 border-l border-slate-700">
-              <AIAnalysisPanel studentId={selectedStudentId} />
+              <AIAnalysisPanel studentId={selectedStudentId || undefined} />
             </div>
           </div>
         );
-    }
   };
 
   return (
@@ -164,8 +153,6 @@ export default function Dashboard() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             isConnected={isConnected}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
           />
           
           {activeTab === "monitoring" && <DashboardStats stats={stats} />}
