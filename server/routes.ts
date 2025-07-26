@@ -2,12 +2,132 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { insertEventSchema } from "@shared/schema";
+import { insertEventSchema, insertUserSchema } from "@shared/schema";
 import { aiManager } from "./ai/aiManager";
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
-  // API Routes
+  // Authentication Routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      console.log("Login attempt:", { username });
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password required" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      console.log("User found:", { found: !!user, isActive: user?.isActive });
+      
+      if (!user || user.password !== password || !user.isActive) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Update last login
+      await storage.updateUser(user.id, { lastLogin: new Date() });
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      console.log("Login successful for user:", userWithoutPassword);
+      res.json({ 
+        success: true, 
+        user: userWithoutPassword,
+        token: `auth-${user.id}-${Date.now()}` // Simple token for demo
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    res.json({ success: true, message: "Logged out successfully" });
+  });
+
+  app.get("/api/auth/me", async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "No authorization header" });
+    }
+
+    // Simple token validation for demo
+    const token = authHeader.replace('Bearer ', '');
+    const userId = token.split('-')[1];
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    try {
+      const user = await storage.getUser(parseInt(userId));
+      if (!user || !user.isActive) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(401).json({ message: "Invalid token" });
+    }
+  });
+
+  // Admin Routes (for user management)
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/admin/users", async (req, res) => {
+    try {
+      const result = insertUserSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid user data", errors: result.error.errors });
+      }
+
+      const newUser = await storage.createUser(result.data);
+      const { password: _, ...userWithoutPassword } = newUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  // God Mode Routes (for system manipulation)
+  app.delete("/api/god/students/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteStudent(id);
+      res.json({ success, message: success ? "Student deleted" : "Student not found" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete student" });
+    }
+  });
+
+  app.delete("/api/god/events/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteEvent(id);
+      res.json({ success, message: success ? "Event deleted" : "Event not found" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete event" });
+    }
+  });
+
+  app.delete("/api/god/events", async (req, res) => {
+    try {
+      const success = await storage.clearAllEvents();
+      res.json({ success, message: "All events cleared" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to clear events" });
+    }
+  });
+
+  // Student Routes
   app.get("/api/students", async (req, res) => {
     try {
       const students = await storage.getAllStudents();

@@ -1,20 +1,30 @@
-import { students, events, type Student, type Event, type InsertStudent, type InsertEvent } from "@shared/schema";
+import { students, events, users, type Student, type Event, type InsertStudent, type InsertEvent, type User, type InsertUser } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
+  // Users
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
+  
   // Students
   getAllStudents(): Promise<Student[]>;
   getStudent(id: number): Promise<Student | undefined>;
   getStudentByStudentId(studentId: string): Promise<Student | undefined>;
   createStudent(student: InsertStudent): Promise<Student>;
   updateStudent(id: number, updates: Partial<Student>): Promise<Student | undefined>;
+  deleteStudent(id: number): Promise<boolean>;
   
   // Events
   getAllEvents(): Promise<Event[]>;
   getEventsByStudentId(studentId: string): Promise<Event[]>;
   getRecentEvents(limit?: number): Promise<Event[]>;
   createEvent(event: InsertEvent): Promise<Event>;
+  deleteEvent(id: number): Promise<boolean>;
+  clearAllEvents(): Promise<boolean>;
   
   // Dashboard Stats
   getDashboardStats(): Promise<{
@@ -34,26 +44,74 @@ export class DatabaseStorage implements IStorage {
   }
 
   private async initializeSampleData() {
+    // Initialize users first
+    const existingUsers = await db.select().from(users);
+    if (existingUsers.length === 0) {
+      const defaultUsers: InsertUser[] = [
+        { username: "god", password: "dev2025!", role: "god", name: "Developer God", email: "dev@smartproctor.com", isActive: true },
+        { username: "admin", password: "admin123", role: "admin", name: "System Admin", email: "admin@smartproctor.com", isActive: true },
+        { username: "teacher1", password: "teacher123", role: "teacher", name: "John Teacher", email: "john@smartproctor.com", isActive: true },
+        { username: "teacher2", password: "teacher123", role: "teacher", name: "Jane Teacher", email: "jane@smartproctor.com", isActive: true },
+      ];
+
+      for (const user of defaultUsers) {
+        await this.createUser(user);
+      }
+    }
+
     // Check if students already exist in database
     const existingStudents = await db.select().from(students);
-    if (existingStudents.length > 0) return;
+    if (existingStudents.length === 0) {
+      const sampleStudents: InsertStudent[] = [
+        { studentId: "STU101", name: "Alex Johnson", behaviorScore: 95, status: "normal", alertCount: 0, aiConfidence: 98, isActive: true },
+        { studentId: "STU102", name: "Sarah Chen", behaviorScore: 73, status: "warning", alertCount: 2, aiConfidence: 76, isActive: true },
+        { studentId: "STU103", name: "Mike Rodriguez", behaviorScore: 42, status: "flagged", alertCount: 5, aiConfidence: 45, isActive: true },
+        { studentId: "STU104", name: "Emma Wilson", behaviorScore: 89, status: "normal", alertCount: 0, aiConfidence: 92, isActive: true },
+        { studentId: "STU105", name: "David Park", behaviorScore: 91, status: "normal", alertCount: 0, aiConfidence: 88, isActive: true },
+        { studentId: "STU106", name: "Lisa Zhang", behaviorScore: 71, status: "warning", alertCount: 1, aiConfidence: 68, isActive: true },
+        { studentId: "STU107", name: "John Smith", behaviorScore: 86, status: "normal", alertCount: 0, aiConfidence: 94, isActive: true },
+        { studentId: "STU108", name: "Ana Garcia", behaviorScore: 39, status: "flagged", alertCount: 3, aiConfidence: 38, isActive: true },
+      ];
 
-    const sampleStudents: InsertStudent[] = [
-      { studentId: "STU101", name: "Alex Johnson", behaviorScore: 95, status: "normal", alertCount: 0, aiConfidence: 98, isActive: true },
-      { studentId: "STU102", name: "Sarah Chen", behaviorScore: 73, status: "warning", alertCount: 2, aiConfidence: 76, isActive: true },
-      { studentId: "STU103", name: "Mike Rodriguez", behaviorScore: 42, status: "flagged", alertCount: 5, aiConfidence: 45, isActive: true },
-      { studentId: "STU104", name: "Emma Wilson", behaviorScore: 89, status: "normal", alertCount: 0, aiConfidence: 92, isActive: true },
-      { studentId: "STU105", name: "David Park", behaviorScore: 91, status: "normal", alertCount: 0, aiConfidence: 88, isActive: true },
-      { studentId: "STU106", name: "Lisa Zhang", behaviorScore: 71, status: "warning", alertCount: 1, aiConfidence: 68, isActive: true },
-      { studentId: "STU107", name: "John Smith", behaviorScore: 86, status: "normal", alertCount: 0, aiConfidence: 94, isActive: true },
-      { studentId: "STU108", name: "Ana Garcia", behaviorScore: 39, status: "flagged", alertCount: 3, aiConfidence: 38, isActive: true },
-    ];
-
-    for (const student of sampleStudents) {
-      await this.createStudent(student);
+      for (const student of sampleStudents) {
+        await this.createStudent(student);
+      }
     }
   }
 
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ ...updates, lastLogin: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.isActive, true));
+  }
+
+  // Student methods
   async getAllStudents(): Promise<Student[]> {
     return await db.select().from(students).where(eq(students.isActive, true));
   }
@@ -85,6 +143,16 @@ export class DatabaseStorage implements IStorage {
     return updatedStudent || undefined;
   }
 
+  async deleteStudent(id: number): Promise<boolean> {
+    const [deletedStudent] = await db
+      .update(students)
+      .set({ isActive: false })
+      .where(eq(students.id, id))
+      .returning();
+    return !!deletedStudent;
+  }
+
+  // Event methods
   async getAllEvents(): Promise<Event[]> {
     return await db.select().from(events).orderBy(desc(events.timestamp));
   }
@@ -107,6 +175,19 @@ export class DatabaseStorage implements IStorage {
       .values(insertEvent)
       .returning();
     return event;
+  }
+
+  async deleteEvent(id: number): Promise<boolean> {
+    const [deletedEvent] = await db
+      .delete(events)
+      .where(eq(events.id, id))
+      .returning();
+    return !!deletedEvent;
+  }
+
+  async clearAllEvents(): Promise<boolean> {
+    await db.delete(events);
+    return true;
   }
 
   async getDashboardStats() {

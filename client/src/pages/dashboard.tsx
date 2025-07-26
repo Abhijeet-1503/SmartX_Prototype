@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 import TopNavigation from "@/components/TopNavigation";
 import DashboardStats from "@/components/DashboardStats";
 import StudentGrid from "@/components/StudentGrid";
@@ -7,10 +8,13 @@ import StudentCard from "@/components/StudentCard";
 import EventLogSidebar from "@/components/EventLogSidebar";
 import AlertNotifications from "@/components/AlertNotifications";
 import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+import AdminPanel from "@/components/AdminPanel";
+import GodModePanel from "@/components/GodModePanel";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { Student, Event, DashboardStats as StatsType } from "@/types/dashboard";
 
 export default function Dashboard() {
+  const { user, isGodMode, isAdmin, isTeacher } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<StatsType | null>(null);
@@ -18,6 +22,7 @@ export default function Dashboard() {
   const [eventFilter, setEventFilter] = useState("All Events");
   const [alerts, setAlerts] = useState<Event[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"monitoring" | "admin" | "god">("monitoring");
 
   const { isConnected, lastMessage } = useWebSocket();
 
@@ -104,31 +109,24 @@ export default function Dashboard() {
     setAlerts(prev => prev.filter(alert => alert.id !== alertId));
   };
 
-  return (
-    <div className="min-h-screen bg-dark-bg text-white">
-      <title>SmartProctor-X | Real-Time Monitoring Dashboard</title>
-      
-      <div className="flex h-screen">
-        {/* Main Dashboard Area */}
-        <div className="flex-1 flex flex-col">
-          <TopNavigation 
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            isConnected={isConnected}
-          />
-          
-          <DashboardStats stats={stats} />
-          
+  const renderContent = () => {
+    switch (activeTab) {
+      case "admin":
+        return isAdmin ? <AdminPanel /> : null;
+      case "god":
+        return isGodMode ? <GodModePanel /> : null;
+      default:
+        return (
           <div className="flex-1 flex overflow-hidden">
             {/* Student Grid */}
-            <div className="flex-1 p-6 overflow-auto">
+            <div className="flex-1 p-6 overflow-auto custom-scrollbar">
               <div className="grid grid-cols-3 gap-6">
                 {filteredStudents.map((student) => (
                   <div 
                     key={student.id} 
                     onClick={() => setSelectedStudentId(student.studentId)}
-                    className={`cursor-pointer transition-transform hover:scale-105 ${
-                      selectedStudentId === student.studentId ? 'ring-2 ring-primary-blue' : ''
+                    className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
+                      selectedStudentId === student.studentId ? 'ring-2 ring-purple-500 shadow-lg shadow-purple-500/20' : ''
                     }`}
                   >
                     <StudentCard student={student} />
@@ -138,25 +136,72 @@ export default function Dashboard() {
             </div>
             
             {/* AI Analysis Panel */}
-            <div className="w-96 p-6 border-l border-gray-700">
+            <div className="w-96 p-6 border-l border-slate-700">
               <AIAnalysisPanel studentId={selectedStudentId} />
             </div>
           </div>
-        </div>
+        );
+    }
+  };
 
-        {/* Event Log Sidebar */}
-        <EventLogSidebar 
-          events={filteredEvents}
-          eventFilter={eventFilter}
-          onFilterChange={setEventFilter}
-        />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-white">
+      <title>SmartProctor-X | AI-Powered Monitoring Dashboard</title>
+      
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -inset-10 opacity-5">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+        </div>
       </div>
 
-      {/* Alert Notifications */}
-      <AlertNotifications 
-        alerts={alerts}
-        onDismiss={dismissAlert}
-      />
+      <div className="relative z-10 flex h-screen">
+        {/* Main Dashboard Area */}
+        <div className="flex-1 flex flex-col">
+          <TopNavigation 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            isConnected={isConnected}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+          
+          {activeTab === "monitoring" && <DashboardStats stats={stats} />}
+          
+          {activeTab === "monitoring" || activeTab === "admin" || activeTab === "god" ? (
+            <div className="flex-1 overflow-hidden">
+              {activeTab === "monitoring" ? (
+                <div className="flex h-full">
+                  {renderContent()}
+                </div>
+              ) : (
+                <div className="p-6 h-full overflow-auto custom-scrollbar">
+                  {renderContent()}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Event Log Sidebar - Only show in monitoring mode */}
+        {activeTab === "monitoring" && (
+          <EventLogSidebar 
+            events={filteredEvents}
+            eventFilter={eventFilter}
+            onFilterChange={setEventFilter}
+          />
+        )}
+      </div>
+
+      {/* Alert Notifications - Only show in monitoring mode */}
+      {activeTab === "monitoring" && (
+        <AlertNotifications 
+          alerts={alerts}
+          onDismiss={dismissAlert}
+        />
+      )}
     </div>
   );
 }

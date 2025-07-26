@@ -6,7 +6,10 @@ SmartProctor-X is a real-time student monitoring dashboard built as a full-stack
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+- Preferred communication style: Simple, everyday language
+- UI Design: Futuristic theme with neon colors and glass morphism effects
+- Authentication: Three access levels required - god mode (developer), admin, teacher
+- God Mode ID: Special developer access with system manipulation capabilities
 
 ## System Architecture
 

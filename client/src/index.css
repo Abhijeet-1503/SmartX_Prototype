@@ -24,7 +24,7 @@
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
   
-  /* SmartProctor-X Dark Theme */
+  /* SmartProctor-X Futuristic Theme */
   --dark-bg: hsl(240, 10%, 3.9%);
   --dark-surface: hsl(240, 8%, 8%);
   --dark-surface-variant: hsl(240, 6%, 12%);
@@ -32,6 +32,17 @@
   --status-warning: hsl(36, 100%, 50%);
   --status-flagged: hsl(4, 90%, 58%);
   --primary-blue: hsl(207, 90%, 54%);
+  
+  /* Futuristic neon colors */
+  --neon-purple: hsl(263, 70%, 50%);
+  --neon-cyan: hsl(195, 100%, 50%);
+  --neon-green: hsl(120, 100%, 50%);
+  --neon-pink: hsl(340, 100%, 70%);
+  --neon-yellow: hsl(60, 100%, 50%);
+  
+  /* Glass morphism */
+  --glass-bg: rgba(30, 41, 59, 0.1);
+  --glass-border: rgba(148, 163, 184, 0.1);
 }
 
 .dark {
@@ -143,16 +154,152 @@
   animation: slideInRight 0.3s ease-out;
 }
 
-/* Pulsing animation for flagged students */
-.student-flagged {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Futuristic animations and effects */
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px var(--neon-purple), 0 0 10px var(--neon-purple), 0 0 15px var(--neon-purple); 
+  }
+  50% { 
+    box-shadow: 0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple), 0 0 30px var(--neon-purple); 
+  }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .8;
-  }
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes scan-line {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes matrix-rain {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.scan-line {
+  animation: scan-line 2s linear infinite;
+}
+
+/* Glass morphism effects */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.2);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Neon text effects */
+.neon-text {
+  text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+}
+
+.neon-purple {
+  color: var(--neon-purple);
+  text-shadow: 0 0 5px var(--neon-purple), 0 0 10px var(--neon-purple);
+}
+
+.neon-cyan {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan);
+}
+
+.neon-green {
+  color: var(--neon-green);
+  text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
+}
+
+/* Border effects */
+.border-neon {
+  border: 1px solid var(--neon-purple);
+  box-shadow: 0 0 5px var(--neon-purple);
+}
+
+.border-glow {
+  border: 1px solid var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.3);
+}
+
+/* Button effects */
+.btn-futuristic {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+  border: 1px solid var(--neon-purple);
+  transition: all 0.3s ease;
+}
+
+.btn-futuristic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-futuristic:hover::before {
+  left: 100%;
+}
+
+.btn-futuristic:hover {
+  box-shadow: 0 0 20px var(--neon-purple), 0 0 40px var(--neon-cyan);
+  transform: translateY(-2px);
+}
+
+/* Scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--dark-surface);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--neon-purple);
+  border-radius: 4px;
+  box-shadow: 0 0 5px var(--neon-purple);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-cyan);
+  box-shadow: 0 0 8px var(--neon-cyan);
+}
+
+/* Pulsing animation for flagged students */
+.student-flagged {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border: 1px solid var(--status-flagged);
+}
+
+/* Animation delays for staggered effects */
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }
